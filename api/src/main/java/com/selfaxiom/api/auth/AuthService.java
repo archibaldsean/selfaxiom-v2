@@ -18,6 +18,14 @@ public class AuthService {
   }
 
   public UserResponse register(RegisterRequest request) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    if (userRepository.existsByEmail(request.getEmail())
+        || userRepository.existsByUsername(request.getUsername())) {
+      throw new DuplicateUserException("Username or email already exists");
+    }
+    User user = new User(null, request.getUsername(), request.getEmail(),
+        passwordEncoder.encode(request.getPassword()));
+    User savedUser = userRepository.save(user);
+    return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
   }
+
 }
