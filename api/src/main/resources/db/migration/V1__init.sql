@@ -1,0 +1,15 @@
+CREATE SCHEMA IF NOT EXISTS selfaxiom;
+
+CREATE TABLE IF NOT EXISTS selfaxiom.users (
+  id BIGINT GENERATED ALWAYS AS IDENTITY,
+  username VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  email VARCHAR(320) NOT NULL,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT pk_users PRIMARY KEY (id),
+  CONSTRAINT uk_users_username UNIQUE (username),
+  CONSTRAINT uk_users_email UNIQUE (email)
+);
