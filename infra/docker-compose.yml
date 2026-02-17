@@ -2,6 +2,8 @@ services:
   db:
     image: postgres:16
     container_name: selfaxiom_db
+    ports:
+      - "5302:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -48,4 +50,3 @@ networks:
 
 volumes:
   selfaxiom_pgdata:
-
