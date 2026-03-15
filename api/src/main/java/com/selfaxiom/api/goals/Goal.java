@@ -1,0 +1,103 @@
+package com.selfaxiom.api.goals;
+
+import com.selfaxiom.api.user.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+import java.time.LocalDate;
+import java.util.Objects;
+
+@Entity
+@Table(name = "goals", schema = "selfaxiom")
+public class Goal {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
+  @Column(name = "goal", nullable = false)
+  private String goal;
+  @Column(name = "finish_date", nullable = false)
+  private LocalDate finishDate;
+  @Column(name = "completed")
+  private boolean completed;
+
+  public Goal() {
+  }
+
+  // Constructor
+  public Goal(Long id, User user, String goal, LocalDate finishDate, boolean completed) {
+    this.id = id;
+    this.user = user;
+    this.goal = goal;
+    this.finishDate = finishDate;
+    this.completed = completed;
+  }
+
+  // Getters
+  public Long getId() {
+    return id;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public String getGoal() {
+    return goal;
+  }
+
+  public LocalDate getFinishDate() {
+    return finishDate;
+  }
+
+  public boolean getCompleted() {
+    return completed;
+  }
+
+  // Setters
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
+  }
+
+  public void setGoal(String goal) {
+    this.goal = goal;
+  }
+
+  public void setFinishDate(LocalDate finishDate) {
+    this.finishDate = finishDate;
+  }
+
+  public void setCompleted(Boolean completed) {
+    this.completed = completed;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    Goal that = (Goal) o;
+    return completed == that.completed && Objects.equals(id, that.id) && Objects.equals(user, that.user)
+        && Objects.equals(goal, that.goal) && Objects.equals(finishDate, that.finishDate);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, user, goal, finishDate, completed);
+  }
+
+}

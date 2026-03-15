@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { setAuthUser } from "../lib/auth";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -26,11 +29,15 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, username, password }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
+        setAuthUser(data);
         setSuccess("Account created successfully!");
         setEmail("");
         setUsername("");
         setPassword("");
+        navigate("/dashboard", { replace: true });
         return;
       }
       if (response.status === 409) {

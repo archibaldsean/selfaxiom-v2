@@ -1,6 +1,7 @@
 package com.selfaxiom.api;
 
 import com.selfaxiom.api.auth.DuplicateUserException;
+import com.selfaxiom.api.auth.InvalidCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Map;
@@ -16,7 +17,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionHandler {
 
   @ExceptionHandler(DuplicateUserException.class)
-  public ResponseEntity<Map<String, Object>> handleDuplicateUser(DuplicateUserException ex, HttpServletRequest request) {
+  public ResponseEntity<Map<String, Object>> handleDuplicateUser(DuplicateUserException ex,
+      HttpServletRequest request) {
     return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
         "timestamp", Instant.now().toString(),
         "status", HttpStatus.CONFLICT.value(),
@@ -37,6 +39,28 @@ public class ApiExceptionHandler {
         "error", "Bad Request",
         "message", "Validation failed",
         "fieldErrors", fieldErrors,
+        "path", request.getRequestURI()));
+  }
+
+  @ExceptionHandler(InvalidCredentialsException.class)
+  public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex,
+      HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+        "timestamp", Instant.now().toString(),
+        "status", HttpStatus.UNAUTHORIZED.value(),
+        "error", "Unauthorized",
+        "message", ex.getMessage(),
+        "path", request.getRequestURI()));
+  }
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex,
+      HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+        "timestamp", Instant.now().toString(),
+        "status", HttpStatus.NOT_FOUND.value(),
+        "error", "Not Found",
+        "message", ex.getMessage(),
         "path", request.getRequestURI()));
   }
 }
