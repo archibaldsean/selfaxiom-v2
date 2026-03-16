@@ -1,4 +1,4 @@
-export default function GoalItem({ title, completed, finishDate, taskCount, completedTaskCount }) {
+export default function GoalItem({ title, description, completed, finishDate, taskCount, completedTaskCount, onViewTasks, onEdit, onDelete }) {
   const progress = taskCount > 0 ? Math.round((completedTaskCount / taskCount) * 100) : 0;
 
   return (
@@ -8,10 +8,22 @@ export default function GoalItem({ title, completed, finishDate, taskCount, comp
         {finishDate ? ` · Target: ${finishDate}` : ""}
       </div>
       <h3>{title || "Untitled goal"}</h3>
+      {description ? <div className="goal-description">{description}</div> : null}
       <div className="progress">
         <div className="progress-bar" style={{ width: `${progress}%` }} />
       </div>
       <div className="goal-next">Tasks complete: {completedTaskCount}/{taskCount}</div>
+      <div className="item-actions">
+        <button className="ghost-button" type="button" onClick={onViewTasks}>
+          View tasks
+        </button>
+        <button className="ghost-button" type="button" onClick={onEdit}>
+          Edit
+        </button>
+        <button className="ghost-button" type="button" onClick={onDelete}>
+          Delete
+        </button>
+      </div>
     </div>
   );
 }

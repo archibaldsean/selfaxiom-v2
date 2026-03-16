@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { setAuthUser } from "../lib/auth";
+import { login } from "../lib/auth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -20,35 +20,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ identifier, password }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        setAuthUser(data);
-        setSuccess(`Welcome back, ${data.username || "user"}!`);
-        setIdentifier("");
-        setPassword("");
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-
-      if (response.status === 401) {
-        setError(data.message || "Invalid credentials.");
-      } else if (response.status === 400) {
-        const fieldErrors = data.fieldErrors ? Object.values(data.fieldErrors).join(" ") : "";
-        setError(fieldErrors || data.message || "Please check your input.");
-      } else {
-        setError(data.message || "An error occurred. Please try again.");
-      }
+      const data = await login(identifier, password);
+      setSuccess(`Welcome back, ${data.user?.username || "user"}!`);
+      setIdentifier("");
+      setPassword("");
+      navigate("/dashboard", { replace: true });
     } catch (caughtError) {
-      setError("Network error. Please try again.");
+      if (caughtError?.status === 401) {
+        setError(caughtError.message || "Invalid credentials.");
+      } else if (caughtError?.status === 400) {
+        const fieldErrors = caughtError.fieldErrors ? Object.values(caughtError.fieldErrors).join(" ") : "";
+        setError(fieldErrors || caughtError.message || "Please check your input.");
+      } else {
+        setError(caughtError.message || "Network error. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

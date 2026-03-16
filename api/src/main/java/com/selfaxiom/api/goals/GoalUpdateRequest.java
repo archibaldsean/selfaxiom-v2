@@ -1,25 +1,25 @@
-package com.selfaxiom.api.tasks;
+package com.selfaxiom.api.goals;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-public class TaskRequest {
+public class GoalUpdateRequest {
 
   @NotBlank
-  private String task;
+  private String goal;
 
   private String description;
 
   @NotNull
   private LocalDate finishDate;
 
-  public String getTask() {
-    return task;
+  public String getGoal() {
+    return goal;
   }
 
-  public void setTask(String task) {
-    this.task = task;
+  public void setGoal(String goal) {
+    this.goal = goal;
   }
 
   public String getDescription() {

@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-public class TaskRequest {
+public class TaskUpdateRequest {
 
   @NotBlank
   private String task;
@@ -13,6 +13,9 @@ public class TaskRequest {
 
   @NotNull
   private LocalDate finishDate;
+
+  @NotNull
+  private Boolean completed;
 
   public String getTask() {
     return task;
@@ -36,5 +39,13 @@ public class TaskRequest {
 
   public void setFinishDate(LocalDate finishDate) {
     this.finishDate = finishDate;
+  }
+
+  public Boolean getCompleted() {
+    return completed;
+  }
+
+  public void setCompleted(Boolean completed) {
+    this.completed = completed;
   }
 }

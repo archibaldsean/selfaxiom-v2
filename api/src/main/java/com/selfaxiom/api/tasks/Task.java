@@ -25,6 +25,8 @@ public class Task {
   private Goal goal;
   @Column(name = "task", nullable = false)
   private String task;
+  @Column(name = "description")
+  private String description;
   @Column(name = "finish_date", nullable = false)
   private LocalDate finishDate;
   @Column(name = "completed")
@@ -34,10 +36,11 @@ public class Task {
   }
 
   // Constructor
-  public Task(Long id, Goal goal, String task, LocalDate finishDate, boolean completed) {
+  public Task(Long id, Goal goal, String task, String description, LocalDate finishDate, boolean completed) {
     this.id = id;
     this.goal = goal;
     this.task = task;
+    this.description = description;
     this.finishDate = finishDate;
     this.completed = completed;
   }
@@ -53,6 +56,10 @@ public class Task {
 
   public String getTask() {
     return task;
+  }
+
+  public String getDescription() {
+    return description;
   }
 
   public LocalDate getFinishDate() {
@@ -76,6 +83,10 @@ public class Task {
     this.task = task;
   }
 
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
   public void setFinishDate(LocalDate finishDate) {
     this.finishDate = finishDate;
   }
@@ -92,12 +103,13 @@ public class Task {
       return false;
     Task that = (Task) o;
     return completed == that.completed && Objects.equals(id, that.id) && Objects.equals(goal, that.goal)
-        && Objects.equals(task, that.task) && Objects.equals(finishDate, that.finishDate);
+        && Objects.equals(task, that.task) && Objects.equals(description, that.description)
+        && Objects.equals(finishDate, that.finishDate);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, goal, task, finishDate, completed);
+    return Objects.hash(id, goal, task, description, finishDate, completed);
   }
 
 }

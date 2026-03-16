@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import ConfirmModal from "../components/ui/ConfirmModal";
+import TaskEditModal from "../components/ui/TaskEditModal";
 import TaskForm from "../components/ui/TaskForm";
 import TaskItem from "../components/ui/TaskItem";
-import { createTask, fetchGoals, fetchTasksByGoal } from "../lib/api";
-import { getAuthUser } from "../lib/auth";
+import { createTask, deleteTask, fetchGoals, fetchTasksByGoal, updateTask } from "../lib/api";
 
 export default function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,17 +12,20 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingTask, setEditingTask] = useState(null);
+  const [deletingTask, setDeletingTask] = useState(null);
+  const [busyDelete, setBusyDelete] = useState(false);
 
   const selectedGoalId = Number(searchParams.get("goalId") || "0");
   const selectedDay = searchParams.get("day") || new Date().toISOString().slice(0, 10);
+  const viewMode = searchParams.get("view") === "all" ? "all" : "day";
 
   async function loadData(goalIdFromQuery) {
     setLoading(true);
     setError("");
 
     try {
-      const user = getAuthUser();
-      const goalList = await fetchGoals(user?.id);
+      const goalList = await fetchGoals();
       setGoals(goalList);
 
       const fallbackGoalId = goalList[0]?.id || 0;
@@ -30,7 +34,7 @@ export default function TasksPage() {
       setTasks(taskList);
 
       if (!goalIdFromQuery && fallbackGoalId) {
-        setSearchParams({ goalId: String(fallbackGoalId), day: selectedDay });
+        setSearchParams({ goalId: String(fallbackGoalId), day: selectedDay, view: viewMode });
       }
     } catch (caughtError) {
       setError(caughtError.message || "Failed to load tasks.");
@@ -49,12 +53,61 @@ export default function TasksPage() {
     await loadData(values.goalId);
   }
 
-  const filteredTasks = useMemo(() => {
+  async function handleToggleTask(task) {
+    try {
+      await updateTask({
+        goalId: task.goalId,
+        taskId: task.id,
+        task: task.task,
+        description: task.description,
+        finishDate: task.finishDate,
+        completed: !task.completed,
+      });
+      await loadData(task.goalId);
+    } catch (caughtError) {
+      setError(caughtError.message || "Failed to update task.");
+    }
+  }
+
+  async function handleSaveTask(values) {
+    if (!editingTask) return;
+
+    await updateTask({
+      goalId: editingTask.goalId,
+      taskId: editingTask.id,
+      task: values.task,
+      description: values.description,
+      finishDate: values.finishDate,
+      completed: editingTask.completed,
+    });
+
+    setEditingTask(null);
+    await loadData(editingTask.goalId);
+  }
+
+  async function handleDeleteTask() {
+    if (!deletingTask) return;
+    setBusyDelete(true);
+
+    try {
+      await deleteTask(deletingTask.goalId, deletingTask.id);
+      setDeletingTask(null);
+      await loadData(selectedGoalId);
+    } catch (caughtError) {
+      setError(caughtError.message || "Failed to delete task.");
+    } finally {
+      setBusyDelete(false);
+    }
+  }
+
+  const visibleTasks = useMemo(() => {
+    if (viewMode === "all") return tasks;
+
     return tasks.filter((task) => {
       if (!task.finishDate) return false;
       return task.finishDate === selectedDay;
     });
-  }, [tasks, selectedDay]);
+  }, [tasks, selectedDay, viewMode]);
 
   return (
     <div className="page">
@@ -84,6 +137,7 @@ export default function TasksPage() {
             setSearchParams({
               goalId: String(selectedGoalId || goals[0]?.id || ""),
               day: nextDay,
+              view: "day",
             });
           }}
         >
@@ -102,7 +156,7 @@ export default function TasksPage() {
             value={selectedGoalId || ""}
             onChange={(event) => {
               const nextGoalId = event.target.value;
-              setSearchParams({ goalId: nextGoalId, day: selectedDay });
+              setSearchParams({ goalId: nextGoalId, day: selectedDay, view: viewMode });
             }}
           >
             {goals.length === 0 ? <option value="">No goals</option> : null}
@@ -112,6 +166,19 @@ export default function TasksPage() {
               </option>
             ))}
           </select>
+          <button
+            className="ghost-button"
+            type="button"
+            onClick={() =>
+              setSearchParams({
+                goalId: String(selectedGoalId || goals[0]?.id || ""),
+                day: selectedDay,
+                view: viewMode === "all" ? "day" : "all",
+              })
+            }
+          >
+            {viewMode === "all" ? "View by day" : "View all for goal"}
+          </button>
         </div>
       </div>
 
@@ -119,23 +186,48 @@ export default function TasksPage() {
 
       <section className="task-list">
         {loading ? <div className="empty-state">Loading...</div> : null}
-        {!loading && filteredTasks.length === 0 ? (
-          <div className="empty-state">No tasks scheduled for this day.</div>
+        {!loading && visibleTasks.length === 0 ? (
+          <div className="empty-state">
+            {viewMode === "all" ? "No tasks found for this goal." : "No tasks scheduled for this day."}
+          </div>
         ) : (
           <div className="task-list-rows">
-            {filteredTasks.map((task) => (
+            {visibleTasks.map((task) => (
               <div className="task-row-wrap" key={task.id}>
                 <TaskItem
                   title={task.task}
+                  description={task.description}
                   completed={task.completed}
                   finishDate={task.finishDate}
                   goalTitle={goals.find((goal) => goal.id === task.goalId)?.goal || ""}
+                  onToggleComplete={() => handleToggleTask(task)}
+                  onEdit={() => setEditingTask(task)}
+                  onDelete={() => setDeletingTask(task)}
                 />
               </div>
             ))}
           </div>
         )}
       </section>
+
+      {editingTask ? (
+        <TaskEditModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSave={handleSaveTask}
+        />
+      ) : null}
+
+      {deletingTask ? (
+        <ConfirmModal
+          title="Delete task"
+          message={`Delete \"${deletingTask.task}\"?`}
+          confirmLabel="Delete task"
+          busy={busyDelete}
+          onClose={() => setDeletingTask(null)}
+          onConfirm={handleDeleteTask}
+        />
+      ) : null}
     </div>
   );
 }

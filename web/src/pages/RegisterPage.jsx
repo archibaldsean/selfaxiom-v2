@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { setAuthUser } from "../lib/auth";
+import { register } from "../lib/auth";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -21,39 +21,21 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/v1/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, username, password }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        setAuthUser(data);
-        setSuccess("Account created successfully!");
-        setEmail("");
-        setUsername("");
-        setPassword("");
-        navigate("/dashboard", { replace: true });
-        return;
+      await register({ email, username, password });
+      setSuccess("Account created successfully!");
+      setEmail("");
+      setUsername("");
+      setPassword("");
+      navigate("/dashboard", { replace: true });
+    } catch (caughtError) {
+      if (caughtError?.status === 409) {
+        setError(caughtError.message || "Email or username already exists.");
+      } else if (caughtError?.status === 400) {
+        const fieldErrors = caughtError.fieldErrors ? Object.values(caughtError.fieldErrors).join(" ") : "";
+        setError(fieldErrors || caughtError.message || "An error occurred. Please try again.");
+      } else {
+        setError(caughtError.message || "An error occurred. Please try again.");
       }
-      if (response.status === 409) {
-        setError(data.message || "Email or username already exists.");
-      }
-      else if (response.status === 400) {
-        // backend validation error
-        const fieldErrors = data.fieldErrors ? Object.values(data.fieldErrors).join(" ") : "";
-        setError(fieldErrors || data.message || "An error occurred. Please try again.");
-      }
-      else {
-        setError("An error occurred. Please try again.");
-      }
-
-    } catch (error) {
-      setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

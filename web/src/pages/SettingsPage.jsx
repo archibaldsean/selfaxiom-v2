@@ -1,4 +1,4 @@
-import { clearAuthUser, getAuthUser } from "../lib/auth";
+import { getAuthUser, logout } from "../lib/auth";
 
 export default function SettingsPage() {
   const user = getAuthUser();
@@ -76,8 +76,8 @@ export default function SettingsPage() {
             <button
               className="ghost-button"
               type="button"
-              onClick={() => {
-                clearAuthUser();
+              onClick={async () => {
+                await logout();
                 window.location.href = "/";
               }}
             >

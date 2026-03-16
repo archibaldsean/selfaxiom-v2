@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchGoals, fetchTasksByGoal } from "../lib/api";
-import { getAuthUser } from "../lib/auth";
 
 export default function StatsPage() {
   const [goals, setGoals] = useState([]);
@@ -8,8 +7,7 @@ export default function StatsPage() {
 
   useEffect(() => {
     async function loadStats() {
-      const user = getAuthUser();
-      const goalList = await fetchGoals(user?.id);
+      const goalList = await fetchGoals();
       const taskList = (await Promise.all(goalList.map((goal) => fetchTasksByGoal(goal.id)))).flat();
       setGoals(goalList);
       setTasks(taskList);

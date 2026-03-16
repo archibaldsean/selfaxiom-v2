@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.selfaxiom.api.user.User;
 import com.selfaxiom.api.user.UserRepository;
-import com.selfaxiom.api.user.UserResponse;
+import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +25,12 @@ class AuthServiceTest {
   @Mock
   private PasswordEncoder passwordEncoder;
 
+  @Mock
+  private JwtService jwtService;
+
+  @Mock
+  private RefreshSessionService refreshSessionService;
+
   @InjectMocks
   private AuthService authService;
 
@@ -40,11 +46,18 @@ class AuthServiceTest {
     when(passwordEncoder.encode(request.getPassword())).thenReturn("hashed-password");
     when(userRepository.save(any(User.class))).thenReturn(new User(1L, "archi", "archi@example.com", "hashed-password"));
 
-    UserResponse response = authService.register(request);
+    when(jwtService.generateAccessToken(any(User.class))).thenReturn("access-token");
+    when(jwtService.generateRefreshToken(any(User.class)))
+        .thenReturn(new RefreshToken("refresh-token", "refresh-id", Instant.now().plusSeconds(3600)));
 
-    assertEquals(1L, response.getId());
-    assertEquals("archi", response.getUsername());
-    assertEquals("archi@example.com", response.getEmail());
+    AuthSessionIssue issued = authService.register(request);
+    AuthResponse response = issued.response();
+
+    assertEquals(1L, response.getUser().getId());
+    assertEquals("archi", response.getUser().getUsername());
+    assertEquals("archi@example.com", response.getUser().getEmail());
+    assertEquals("access-token", response.getAccessToken());
+    assertEquals("refresh-token", issued.refreshToken());
   }
 
   @Test

@@ -1,22 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import GoalForm from "../components/ui/GoalForm";
 import GoalItem from "../components/ui/GoalItem";
-import { createGoal, fetchGoals, fetchTasksByGoal } from "../lib/api";
-import { getAuthUser } from "../lib/auth";
+import ConfirmModal from "../components/ui/ConfirmModal";
+import GoalEditModal from "../components/ui/GoalEditModal";
+import { createGoal, deleteGoal, fetchGoals, fetchTasksByGoal, updateGoal } from "../lib/api";
 
 export default function GoalsPage() {
+  const navigate = useNavigate();
   const [goals, setGoals] = useState([]);
   const [tasksByGoal, setTasksByGoal] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [deletingGoal, setDeletingGoal] = useState(null);
+  const [busyDelete, setBusyDelete] = useState(false);
 
   async function loadGoals() {
     setLoading(true);
     setError("");
 
     try {
-      const user = getAuthUser();
-      const goalList = await fetchGoals(user?.id);
+      const goalList = await fetchGoals();
       const taskResults = await Promise.all(goalList.map((goal) => fetchTasksByGoal(goal.id)));
 
       const nextTasksByGoal = {};
@@ -38,13 +43,41 @@ export default function GoalsPage() {
   }, []);
 
   async function handleCreateGoal(values) {
-    const user = getAuthUser();
     await createGoal({
-      userId: user?.id,
       goal: values.goal,
+      description: values.description,
       finishDate: values.finishDate,
     });
     await loadGoals();
+  }
+
+  async function handleSaveGoal(values) {
+    if (!editingGoal) return;
+
+    await updateGoal({
+      goalId: editingGoal.id,
+      goal: values.goal,
+      description: values.description,
+      finishDate: values.finishDate,
+    });
+
+    setEditingGoal(null);
+    await loadGoals();
+  }
+
+  async function handleDeleteGoal() {
+    if (!deletingGoal) return;
+    setBusyDelete(true);
+
+    try {
+      await deleteGoal(deletingGoal.id);
+      setDeletingGoal(null);
+      await loadGoals();
+    } catch (caughtError) {
+      setError(caughtError.message || "Failed to delete goal.");
+    } finally {
+      setBusyDelete(false);
+    }
   }
 
   const featuredGoal = useMemo(() => goals[0], [goals]);
@@ -75,10 +108,14 @@ export default function GoalsPage() {
             <GoalItem
               key={goal.id}
               title={goal.goal}
+              description={goal.description}
               completed={goal.completed}
               finishDate={goal.finishDate}
               taskCount={tasks.length}
               completedTaskCount={completedTaskCount}
+              onViewTasks={() => navigate(`/tasks?goalId=${goal.id}&view=all`)}
+              onEdit={() => setEditingGoal(goal)}
+              onDelete={() => setDeletingGoal(goal)}
             />
           );
         })}
@@ -90,7 +127,7 @@ export default function GoalsPage() {
           <div className="goal-detail-grid">
             <div>
               <h3>{featuredGoal.goal}</h3>
-              <p>Keep this goal visible and ship tasks daily.</p>
+              <p>{featuredGoal.description || "Add a description to clarify the target and constraints."}</p>
               <div className="goal-detail-block">
                 <div className="goal-detail-label">Status</div>
                 <div>{featuredGoal.completed ? "done" : "active"}</div>
@@ -111,6 +148,25 @@ export default function GoalsPage() {
           <div className="empty-state">Pick a goal to see the detail.</div>
         )}
       </section>
+
+      {editingGoal ? (
+        <GoalEditModal
+          goal={editingGoal}
+          onClose={() => setEditingGoal(null)}
+          onSave={handleSaveGoal}
+        />
+      ) : null}
+
+      {deletingGoal ? (
+        <ConfirmModal
+          title="Delete goal"
+          message={`Delete \"${deletingGoal.goal}\"? This also removes every task under it.`}
+          confirmLabel="Delete goal"
+          busy={busyDelete}
+          onClose={() => setDeletingGoal(null)}
+          onConfirm={handleDeleteGoal}
+        />
+      ) : null}
     </div>
   );
 }

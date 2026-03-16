@@ -24,6 +24,7 @@ export default function TaskForm({ goals, defaultGoalId = "", defaultDate, onCre
       await onCreate({
         goalId: goalValue,
         task: String(fd.get("task") || "").trim(),
+        description: String(fd.get("description") || "").trim(),
         finishDate: String(fd.get("finishDate") || "").trim(),
       });
       form.reset();
@@ -72,6 +73,11 @@ export default function TaskForm({ goals, defaultGoalId = "", defaultDate, onCre
             defaultValue={defaultDate}
             required
           />
+
+          <label className="inline-form-label" htmlFor="task-description">
+            Description
+          </label>
+          <textarea id="task-description" name="description" className="inline-form-input" rows={3} />
 
           {error ? <div className="inline-form-error">{error}</div> : null}
 

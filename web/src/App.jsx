@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -11,13 +12,40 @@ import RewardsPage from "./pages/RewardsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AppSidebar from "./components/ui/AppSidebar";
 import AppTopbar from "./components/ui/AppTopbar";
-import { getAuthUser } from "./lib/auth";
+import { getAuthUser, refreshSession } from "./lib/auth";
 
 function RequireAuth() {
-  const user = getAuthUser();
+  const [ready, setReady] = useState(false);
+  const [user, setUser] = useState(getAuthUser());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrapSession() {
+      if (!user?.id) {
+        await refreshSession();
+      }
+
+      if (!cancelled) {
+        setUser(getAuthUser());
+        setReady(true);
+      }
+    }
+
+    bootstrapSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!ready) {
+    return <div className="empty-state">Loading session...</div>;
+  }
+
   if (!user?.id) {
     return <Navigate to="/login" replace />;
   }
+
   return <Outlet />;
 }
 

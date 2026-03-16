@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchGoals, fetchTasksByGoal } from "../lib/api";
-import { getAuthUser } from "../lib/auth";
 
 function classifyTasks(tasks) {
   const today = new Date().toISOString().slice(0, 10);
@@ -30,8 +29,7 @@ export default function DashboardPage() {
       setError("");
 
       try {
-        const user = getAuthUser();
-        const goalList = await fetchGoals(user?.id);
+        const goalList = await fetchGoals();
         const nestedTasks = await Promise.all(goalList.map((goal) => fetchTasksByGoal(goal.id)));
         const flatTasks = nestedTasks.flat().map((task) => {
           const goalTitle = goalList.find((goal) => goal.id === task.goalId)?.goal || "";

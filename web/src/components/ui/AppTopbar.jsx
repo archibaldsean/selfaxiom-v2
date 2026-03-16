@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { clearAuthUser, getAuthUser } from "../../lib/auth";
+import { getAuthUser, logout } from "../../lib/auth";
 
 export default function AppTopbar() {
   const navigate = useNavigate();
@@ -19,8 +19,8 @@ export default function AppTopbar() {
         <button
           className="app-logout"
           type="button"
-          onClick={() => {
-            clearAuthUser();
+          onClick={async () => {
+            await logout();
             navigate("/", { replace: true });
           }}
         >

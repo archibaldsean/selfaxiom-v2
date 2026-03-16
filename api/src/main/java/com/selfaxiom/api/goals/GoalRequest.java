@@ -6,22 +6,13 @@ import java.time.LocalDate;
 
 public class GoalRequest {
 
-  @NotNull
-  private Long userId;
-
   @NotBlank
   private String goal;
 
+  private String description;
+
   @NotNull
   private LocalDate finishDate;
-
-  public Long getUserId() {
-    return userId;
-  }
-
-  public void setUserId(Long userId) {
-    this.userId = userId;
-  }
 
   public String getGoal() {
     return goal;
@@ -29,6 +20,14 @@ public class GoalRequest {
 
   public void setGoal(String goal) {
     this.goal = goal;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public LocalDate getFinishDate() {

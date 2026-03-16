@@ -16,6 +16,7 @@ export default function GoalForm({ onCreate, defaultDate }) {
     try {
       await onCreate({
         goal: String(fd.get("goal") || "").trim(),
+        description: String(fd.get("description") || "").trim(),
         finishDate: String(fd.get("finishDate") || "").trim(),
       });
       form.reset();
@@ -52,6 +53,11 @@ export default function GoalForm({ onCreate, defaultDate }) {
             defaultValue={defaultDate}
             required
           />
+
+          <label className="inline-form-label" htmlFor="goal-description">
+            Description
+          </label>
+          <textarea id="goal-description" name="description" className="inline-form-input" rows={3} />
 
           {error ? <div className="inline-form-error">{error}</div> : null}
 

@@ -7,13 +7,16 @@ public class TaskResponse {
   private final Long id;
   private final Long goalId;
   private final String task;
+  private final String description;
   private final LocalDate finishDate;
   private final boolean completed;
 
-  public TaskResponse(Long id, Long goalId, String task, LocalDate finishDate, boolean completed) {
+  public TaskResponse(Long id, Long goalId, String task, String description, LocalDate finishDate,
+      boolean completed) {
     this.id = id;
     this.goalId = goalId;
     this.task = task;
+    this.description = description;
     this.finishDate = finishDate;
     this.completed = completed;
   }
@@ -28,6 +31,10 @@ public class TaskResponse {
 
   public String getTask() {
     return task;
+  }
+
+  public String getDescription() {
+    return description;
   }
 
   public LocalDate getFinishDate() {
