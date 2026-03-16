@@ -1,7 +1,7 @@
 package com.selfaxiom.api.goals;
 
 import jakarta.validation.Valid;
-import com.selfaxiom.api.auth.AuthenticatedUser;
+import com.selfaxiom.api.auth.AuthModels.AuthenticatedUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

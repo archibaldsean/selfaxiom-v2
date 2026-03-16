@@ -1,5 +1,6 @@
 package com.selfaxiom.api.auth;
 
+import com.selfaxiom.api.auth.AuthModels.AuthenticatedUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

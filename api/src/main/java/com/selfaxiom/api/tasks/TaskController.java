@@ -1,6 +1,6 @@
 package com.selfaxiom.api.tasks;
 
-import com.selfaxiom.api.auth.AuthenticatedUser;
+import com.selfaxiom.api.auth.AuthModels.AuthenticatedUser;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.selfaxiom.api.ResourceNotFoundException;
 import com.selfaxiom.api.goals.Goal;
 import com.selfaxiom.api.goals.GoalRepository;
+import com.selfaxiom.api.rewards.RewardService;
 import com.selfaxiom.api.user.User;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -27,6 +28,9 @@ class TaskServiceTest {
   @Mock
   private GoalRepository goalRepository;
 
+  @Mock
+  private RewardService rewardService;
+
   @InjectMocks
   private TaskService taskService;
 
@@ -44,7 +48,7 @@ class TaskServiceTest {
 
   @Test
   void createTaskReturnsTaskResponse() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
 
     TaskRequest request = new TaskRequest();
@@ -84,7 +88,7 @@ class TaskServiceTest {
 
   @Test
   void getByIdReturnsTaskResponse() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
     Task task = new Task(7L, goal, "Write tests", "Cover services", LocalDate.now().plusDays(3), false);
 
@@ -128,7 +132,7 @@ class TaskServiceTest {
 
   @Test
   void updateReturnsUpdatedTaskResponse() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
     Task existing = new Task(7L, goal, "Old task", "Old details", LocalDate.now().plusDays(3), false);
 
@@ -153,6 +157,34 @@ class TaskServiceTest {
     assertEquals("Updated task", response.getTask());
     assertEquals("Updated details", response.getDescription());
     assertEquals(true, response.isCompleted());
+    verify(rewardService).applyTaskCompletionChange(saved, false, true);
+    verify(rewardService).applyGoalCompletionChange(goal, false, true);
+  }
+
+  @Test
+  void updateReopenRemovesTaskPoints() {
+    User user = new User(1L, "archi", "archi@example.com", "hash", 110);
+    Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), true);
+    Task existing = new Task(7L, goal, "Done task", "Old details", LocalDate.now().plusDays(3), true);
+
+    TaskUpdateRequest request = new TaskUpdateRequest();
+    request.setTask("Done task");
+    request.setDescription("Old details");
+    request.setFinishDate(LocalDate.now().plusDays(3));
+    request.setCompleted(false);
+
+    Task saved = new Task(7L, goal, request.getTask(), request.getDescription(), request.getFinishDate(), false);
+
+    when(goalRepository.findByIdAndUser_Id(5L, 1L)).thenReturn(Optional.of(goal));
+    when(taskRepository.findByIdAndGoal_Id(7L, 5L)).thenReturn(Optional.of(existing));
+    when(taskRepository.save(any(Task.class))).thenReturn(saved);
+    when(taskRepository.countByGoal_Id(5L)).thenReturn(3L);
+    when(taskRepository.countByGoal_IdAndCompletedTrue(5L)).thenReturn(2L);
+
+    taskService.update(1L, 5L, 7L, request);
+
+    verify(rewardService).applyTaskCompletionChange(saved, true, false);
+    verify(rewardService).applyGoalCompletionChange(goal, true, false);
   }
 
   @Test
@@ -172,7 +204,7 @@ class TaskServiceTest {
 
   @Test
   void deleteRemovesTaskWhenFound() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
     Task task = new Task(7L, goal, "Write tests", "Cover services", LocalDate.now().plusDays(3), false);
 
@@ -188,7 +220,7 @@ class TaskServiceTest {
 
   @Test
   void updateMarksGoalCompleteWhenAllTasksComplete() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
     Task existing = new Task(7L, goal, "Old task", "Old details", LocalDate.now().plusDays(3), false);
 
@@ -210,11 +242,12 @@ class TaskServiceTest {
 
     assertEquals(true, goal.getCompleted());
     verify(goalRepository).save(goal);
+    verify(rewardService).applyGoalCompletionChange(goal, false, true);
   }
 
   @Test
   void deleteMarksGoalIncompleteWhenNoTasksRemain() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), true);
     Task task = new Task(7L, goal, "Write tests", "Cover services", LocalDate.now().plusDays(3), true);
 
@@ -227,5 +260,6 @@ class TaskServiceTest {
 
     assertEquals(false, goal.getCompleted());
     verify(goalRepository).save(goal);
+    verify(rewardService).applyGoalCompletionChange(goal, true, false);
   }
 }

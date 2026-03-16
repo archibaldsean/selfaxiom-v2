@@ -1,12 +1,21 @@
 package com.selfaxiom.api.auth;
 
+import com.selfaxiom.api.auth.AuthExceptions.DuplicateUserException;
+import com.selfaxiom.api.auth.AuthExceptions.InvalidCredentialsException;
+import com.selfaxiom.api.auth.AuthModels.AuthResponse;
+import com.selfaxiom.api.auth.AuthModels.AuthSessionIssue;
+import com.selfaxiom.api.auth.AuthModels.AuthenticatedUser;
+import com.selfaxiom.api.auth.AuthModels.LoginRequest;
+import com.selfaxiom.api.auth.AuthModels.ParsedRefreshToken;
+import com.selfaxiom.api.auth.AuthModels.RefreshToken;
+import com.selfaxiom.api.auth.AuthModels.RegisterRequest;
 import com.selfaxiom.api.user.User;
 import com.selfaxiom.api.user.UserRepository;
 import com.selfaxiom.api.user.UserResponse;
+import java.util.Optional;
 import java.util.Objects;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -30,7 +39,7 @@ public class AuthService {
       throw new DuplicateUserException("Username or email already exists");
     }
     User user = new User(null, request.getUsername(), request.getEmail(),
-        passwordEncoder.encode(request.getPassword()));
+        passwordEncoder.encode(request.getPassword()), 0);
     User savedUser = userRepository.save(user);
     return issueSession(savedUser);
   }
@@ -69,7 +78,7 @@ public class AuthService {
     refreshSessionService.rotate(parsed.userId(), parsed.tokenId(), user, nextRefresh.tokenId(),
         nextRefresh.expiresAt());
 
-    UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+    UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getPointsBalance());
     String accessToken = jwtService.generateAccessToken(user);
     return new AuthSessionIssue(new AuthResponse(userResponse, accessToken), nextRefresh.token());
   }
@@ -93,7 +102,7 @@ public class AuthService {
 
     User user = userRepository.findById(currentUser.id())
         .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
-    return new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+    return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getPointsBalance());
   }
 
   private AuthSessionIssue issueSession(User user) {
@@ -101,7 +110,7 @@ public class AuthService {
     RefreshToken refreshToken = jwtService.generateRefreshToken(user);
     refreshSessionService.create(user, refreshToken.tokenId(), refreshToken.expiresAt());
     String accessToken = jwtService.generateAccessToken(user);
-    UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+    UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getPointsBalance());
     return new AuthSessionIssue(new AuthResponse(userResponse, accessToken), refreshToken.token());
 
   }

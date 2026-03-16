@@ -43,7 +43,7 @@ class GoalServiceTest {
 
   @Test
   void createGoalReturnsGoalResponse() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     GoalRequest request = new GoalRequest();
     request.setGoal("Launch MVP");
     request.setDescription("Ship first public version");
@@ -71,7 +71,7 @@ class GoalServiceTest {
 
   @Test
   void getByIdReturnsGoalResponse() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(10L, user, "Launch MVP", "Ship first public version", LocalDate.now().plusDays(14), false);
     when(goalRepository.findByIdAndUser_Id(10L, 1L)).thenReturn(Optional.of(goal));
 
@@ -97,7 +97,7 @@ class GoalServiceTest {
 
   @Test
   void updateReturnsUpdatedGoalResponse() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal existing = new Goal(10L, user, "Old goal", "Old details", LocalDate.now().plusDays(10), false);
 
     GoalUpdateRequest request = new GoalUpdateRequest();
@@ -127,7 +127,7 @@ class GoalServiceTest {
 
   @Test
   void deleteRemovesGoalWhenFound() {
-    User user = new User(1L, "archi", "archi@example.com", "hash");
+    User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(10L, user, "Launch MVP", "Ship first public version", LocalDate.now().plusDays(14), false);
     when(goalRepository.findByIdAndUser_Id(10L, 1L)).thenReturn(Optional.of(goal));
 

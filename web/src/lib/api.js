@@ -80,3 +80,11 @@ export async function deleteTask(goalId, taskId) {
     method: "DELETE",
   });
 }
+
+export async function fetchRewardSummary() {
+  return requestJson("/api/v1/rewards/summary");
+}
+
+export async function fetchRewardHistory() {
+  return requestJson("/api/v1/rewards/history");
+}

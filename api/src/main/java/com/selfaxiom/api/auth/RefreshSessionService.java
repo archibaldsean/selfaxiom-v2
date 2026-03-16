@@ -1,5 +1,6 @@
 package com.selfaxiom.api.auth;
 
+import com.selfaxiom.api.auth.AuthExceptions.InvalidCredentialsException;
 import com.selfaxiom.api.user.User;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

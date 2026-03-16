@@ -20,17 +20,20 @@ public class User {
   private String email;
   @Column(name = "password_hash", nullable = false)
   private String passwordHash;
+  @Column(name = "points_balance", nullable = false)
+  private int pointsBalance;
 
   // Constructor
 
   public User() {
   }
 
-  public User(Long id, String username, String email, String passwordHash) {
+  public User(Long id, String username, String email, String passwordHash, int pointsBalance) {
     this.id = id;
     this.username = username;
     this.email = email;
     this.passwordHash = passwordHash;
+    this.pointsBalance = pointsBalance;
   }
 
   // Getters
@@ -51,6 +54,10 @@ public class User {
     return passwordHash;
   }
 
+  public int getPointsBalance() {
+    return pointsBalance;
+  }
+
   // Setters
 
   public void setUsername(String username) {
@@ -65,6 +72,10 @@ public class User {
     this.passwordHash = passwordHash;
   }
 
+  public void setPointsBalance(int pointsBalance) {
+    this.pointsBalance = pointsBalance;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -73,11 +84,12 @@ public class User {
       return false;
     User user = (User) o;
     return Objects.equals(id, user.id) && Objects.equals(username, user.username)
-        && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash);
+        && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash)
+        && pointsBalance == user.pointsBalance;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, username, email, passwordHash);
+    return Objects.hash(id, username, email, passwordHash, pointsBalance);
   }
 }

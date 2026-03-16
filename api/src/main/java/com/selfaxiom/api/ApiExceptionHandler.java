@@ -1,7 +1,7 @@
 package com.selfaxiom.api;
 
-import com.selfaxiom.api.auth.DuplicateUserException;
-import com.selfaxiom.api.auth.InvalidCredentialsException;
+import com.selfaxiom.api.auth.AuthExceptions.DuplicateUserException;
+import com.selfaxiom.api.auth.AuthExceptions.InvalidCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Map;
