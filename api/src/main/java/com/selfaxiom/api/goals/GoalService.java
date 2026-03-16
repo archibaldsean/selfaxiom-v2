@@ -5,8 +5,10 @@ import com.selfaxiom.api.user.User;
 import com.selfaxiom.api.user.UserRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class GoalService {
 
   private final GoalRepository goalRepository;
@@ -17,11 +19,12 @@ public class GoalService {
     this.userRepository = userRepository;
   }
 
+  @Transactional
   public GoalResponse createGoal(Long userId, GoalRequest request) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-    Goal goal = new Goal(null, user, request.getGoal(), request.getDescription(), request.getFinishDate(), false);
+    Goal goal = new Goal(user, request.goal(), request.description(), request.finishDate(), false);
     Goal savedGoal = goalRepository.save(goal);
     return mapToResponse(savedGoal);
   }
@@ -39,18 +42,20 @@ public class GoalService {
     return mapToResponse(goal);
   }
 
-  public GoalResponse update(Long userId, Long id, GoalUpdateRequest request) {
+  @Transactional
+  public GoalResponse update(Long userId, Long id, GoalRequest request) {
     Goal goal = goalRepository.findByIdAndUser_Id(id, userId)
         .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
 
-    goal.setGoal(request.getGoal());
-    goal.setDescription(request.getDescription());
-    goal.setFinishDate(request.getFinishDate());
+    goal.setGoal(request.goal());
+    goal.setDescription(request.description());
+    goal.setFinishDate(request.finishDate());
 
     Goal savedGoal = goalRepository.save(goal);
     return mapToResponse(savedGoal);
   }
 
+  @Transactional
   public void delete(Long userId, Long id) {
     Goal goal = goalRepository.findByIdAndUser_Id(id, userId)
         .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));

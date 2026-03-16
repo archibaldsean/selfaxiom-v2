@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function TaskForm({ goals, defaultGoalId = "", defaultDate, onCreate }) {
-  const [open, setOpen] = useState(Boolean(defaultGoalId));
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 

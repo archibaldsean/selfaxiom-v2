@@ -7,6 +7,9 @@ api/.classpath
 api/.project
 api/.settings/
 
+# Web build output (Vite outDir=web/public)
+web/public/
+
 # IDE
 .vscode/
 .idea/
@@ -14,4 +17,3 @@ api/.settings/
 # OS
 .DS_Store
 Thumbs.db
-

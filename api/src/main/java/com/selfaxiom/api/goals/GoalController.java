@@ -3,7 +3,6 @@ package com.selfaxiom.api.goals;
 import jakarta.validation.Valid;
 import com.selfaxiom.api.auth.AuthModels.AuthenticatedUser;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
@@ -26,36 +26,36 @@ public class GoalController {
   }
 
   @PostMapping
-  public ResponseEntity<GoalResponse> createGoal(
+  @ResponseStatus(HttpStatus.CREATED)
+  public GoalResponse createGoal(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @Valid @RequestBody GoalRequest request) {
-    GoalResponse response = goalService.createGoal(currentUser.id(), request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    return goalService.createGoal(currentUser.id(), request);
   }
 
   @GetMapping
-  public ResponseEntity<List<GoalResponse>> listGoalsByUser(@AuthenticationPrincipal AuthenticatedUser currentUser) {
-    return ResponseEntity.ok(goalService.listByUser(currentUser.id()));
+  public List<GoalResponse> listGoalsByUser(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+    return goalService.listByUser(currentUser.id());
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<GoalResponse> getGoalById(
+  public GoalResponse getGoalById(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long id) {
-    return ResponseEntity.ok(goalService.getById(currentUser.id(), id));
+    return goalService.getById(currentUser.id(), id);
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<GoalResponse> updateGoal(
+  public GoalResponse updateGoal(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long id,
-      @Valid @RequestBody GoalUpdateRequest request) {
-    return ResponseEntity.ok(goalService.update(currentUser.id(), id, request));
+      @Valid @RequestBody GoalRequest request) {
+    return goalService.update(currentUser.id(), id, request);
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteGoal(@AuthenticationPrincipal AuthenticatedUser currentUser, @PathVariable Long id) {
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteGoal(@AuthenticationPrincipal AuthenticatedUser currentUser, @PathVariable Long id) {
     goalService.delete(currentUser.id(), id);
-    return ResponseEntity.noContent().build();
   }
 }
