@@ -9,8 +9,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
   Optional<Task> findByIdAndGoal_Id(Long taskId, Long goalId);
 
-  boolean existsByIdAndGoal_Id(Long taskId, Long goalId);
-
   long countByGoal_Id(Long goalId);
 
   long countByGoal_IdAndCompletedTrue(Long goalId);

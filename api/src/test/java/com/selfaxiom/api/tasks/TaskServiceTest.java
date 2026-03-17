@@ -36,10 +36,7 @@ class TaskServiceTest {
 
   @Test
   void createTaskThrowsWhenGoalMissing() {
-    TaskRequest request = new TaskRequest();
-    request.setTask("Ship API");
-    request.setDescription("Finish endpoints and docs");
-    request.setFinishDate(LocalDate.now().plusDays(2));
+    TaskRequest request = new TaskRequest("Ship API", "Finish endpoints and docs", LocalDate.now().plusDays(2));
 
     when(goalRepository.findByIdAndUser_Id(99L, 1L)).thenReturn(Optional.empty());
 
@@ -51,12 +48,9 @@ class TaskServiceTest {
     User user = new User(1L, "archi", "archi@example.com", "hash", 0);
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
 
-    TaskRequest request = new TaskRequest();
-    request.setTask("Write tests");
-    request.setDescription("Cover services and controllers");
-    request.setFinishDate(LocalDate.now().plusDays(3));
+    TaskRequest request = new TaskRequest("Write tests", "Cover services and controllers", LocalDate.now().plusDays(3));
 
-    Task savedTask = new Task(7L, goal, "Write tests", request.getDescription(), request.getFinishDate(), false);
+    Task savedTask = new Task(7L, goal, "Write tests", request.description(), request.finishDate(), false);
 
     when(goalRepository.findByIdAndUser_Id(5L, 1L)).thenReturn(Optional.of(goal));
     when(taskRepository.save(any(Task.class))).thenReturn(savedTask);
@@ -65,10 +59,10 @@ class TaskServiceTest {
 
     TaskResponse response = taskService.createTask(1L, 5L, request);
 
-    assertEquals(7L, response.getId());
-    assertEquals(5L, response.getGoalId());
-    assertEquals("Write tests", response.getTask());
-    assertEquals("Cover services and controllers", response.getDescription());
+    assertEquals(7L, response.id());
+    assertEquals(5L, response.goalId());
+    assertEquals("Write tests", response.task());
+    assertEquals("Cover services and controllers", response.description());
   }
 
   @Test
@@ -97,19 +91,15 @@ class TaskServiceTest {
 
     TaskResponse response = taskService.getById(1L, 5L, 7L);
 
-    assertEquals(7L, response.getId());
-    assertEquals(5L, response.getGoalId());
-    assertEquals("Write tests", response.getTask());
-    assertEquals("Cover services", response.getDescription());
+    assertEquals(7L, response.id());
+    assertEquals(5L, response.goalId());
+    assertEquals("Write tests", response.task());
+    assertEquals("Cover services", response.description());
   }
 
   @Test
   void updateThrowsWhenGoalMissing() {
-    TaskUpdateRequest request = new TaskUpdateRequest();
-    request.setTask("Updated task");
-    request.setDescription("Updated details");
-    request.setFinishDate(LocalDate.now().plusDays(5));
-    request.setCompleted(true);
+    TaskUpdateRequest request = new TaskUpdateRequest("Updated task", "Updated details", LocalDate.now().plusDays(5), true);
 
     when(goalRepository.findByIdAndUser_Id(99L, 1L)).thenReturn(Optional.empty());
 
@@ -118,11 +108,7 @@ class TaskServiceTest {
 
   @Test
   void updateThrowsWhenTaskMissingWithinGoal() {
-    TaskUpdateRequest request = new TaskUpdateRequest();
-    request.setTask("Updated task");
-    request.setDescription("Updated details");
-    request.setFinishDate(LocalDate.now().plusDays(5));
-    request.setCompleted(true);
+    TaskUpdateRequest request = new TaskUpdateRequest("Updated task", "Updated details", LocalDate.now().plusDays(5), true);
 
     when(goalRepository.findByIdAndUser_Id(5L, 1L)).thenReturn(Optional.of(new Goal()));
     when(taskRepository.findByIdAndGoal_Id(7L, 5L)).thenReturn(Optional.empty());
@@ -136,13 +122,9 @@ class TaskServiceTest {
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
     Task existing = new Task(7L, goal, "Old task", "Old details", LocalDate.now().plusDays(3), false);
 
-    TaskUpdateRequest request = new TaskUpdateRequest();
-    request.setTask("Updated task");
-    request.setDescription("Updated details");
-    request.setFinishDate(LocalDate.now().plusDays(8));
-    request.setCompleted(true);
+    TaskUpdateRequest request = new TaskUpdateRequest("Updated task", "Updated details", LocalDate.now().plusDays(8), true);
 
-    Task saved = new Task(7L, goal, request.getTask(), request.getDescription(), request.getFinishDate(), true);
+    Task saved = new Task(7L, goal, request.task(), request.description(), request.finishDate(), true);
 
     when(goalRepository.findByIdAndUser_Id(5L, 1L)).thenReturn(Optional.of(goal));
     when(taskRepository.findByIdAndGoal_Id(7L, 5L)).thenReturn(Optional.of(existing));
@@ -152,11 +134,11 @@ class TaskServiceTest {
 
     TaskResponse response = taskService.update(1L, 5L, 7L, request);
 
-    assertEquals(7L, response.getId());
-    assertEquals(5L, response.getGoalId());
-    assertEquals("Updated task", response.getTask());
-    assertEquals("Updated details", response.getDescription());
-    assertEquals(true, response.isCompleted());
+    assertEquals(7L, response.id());
+    assertEquals(5L, response.goalId());
+    assertEquals("Updated task", response.task());
+    assertEquals("Updated details", response.description());
+    assertEquals(true, response.completed());
     verify(rewardService).applyTaskCompletionChange(saved, false, true);
     verify(rewardService).applyGoalCompletionChange(goal, false, true);
   }
@@ -167,13 +149,9 @@ class TaskServiceTest {
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), true);
     Task existing = new Task(7L, goal, "Done task", "Old details", LocalDate.now().plusDays(3), true);
 
-    TaskUpdateRequest request = new TaskUpdateRequest();
-    request.setTask("Done task");
-    request.setDescription("Old details");
-    request.setFinishDate(LocalDate.now().plusDays(3));
-    request.setCompleted(false);
+    TaskUpdateRequest request = new TaskUpdateRequest("Done task", "Old details", LocalDate.now().plusDays(3), false);
 
-    Task saved = new Task(7L, goal, request.getTask(), request.getDescription(), request.getFinishDate(), false);
+    Task saved = new Task(7L, goal, request.task(), request.description(), request.finishDate(), false);
 
     when(goalRepository.findByIdAndUser_Id(5L, 1L)).thenReturn(Optional.of(goal));
     when(taskRepository.findByIdAndGoal_Id(7L, 5L)).thenReturn(Optional.of(existing));
@@ -224,13 +202,9 @@ class TaskServiceTest {
     Goal goal = new Goal(5L, user, "Launch", "Ship milestone", LocalDate.now().plusDays(30), false);
     Task existing = new Task(7L, goal, "Old task", "Old details", LocalDate.now().plusDays(3), false);
 
-    TaskUpdateRequest request = new TaskUpdateRequest();
-    request.setTask("Updated task");
-    request.setDescription("Updated details");
-    request.setFinishDate(LocalDate.now().plusDays(8));
-    request.setCompleted(true);
+    TaskUpdateRequest request = new TaskUpdateRequest("Updated task", "Updated details", LocalDate.now().plusDays(8), true);
 
-    Task saved = new Task(7L, goal, request.getTask(), request.getDescription(), request.getFinishDate(), true);
+    Task saved = new Task(7L, goal, request.task(), request.description(), request.finishDate(), true);
 
     when(goalRepository.findByIdAndUser_Id(5L, 1L)).thenReturn(Optional.of(goal));
     when(taskRepository.findByIdAndGoal_Id(7L, 5L)).thenReturn(Optional.of(existing));

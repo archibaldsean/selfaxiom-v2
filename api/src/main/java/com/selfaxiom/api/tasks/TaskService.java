@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class TaskService {
 
   private final TaskRepository taskRepository;
@@ -25,7 +26,7 @@ public class TaskService {
   public TaskResponse createTask(Long userId, Long goalId, TaskRequest request) {
     Goal goal = findOwnedGoalOrThrow(userId, goalId);
 
-    Task task = new Task(null, goal, request.getTask(), request.getDescription(), request.getFinishDate(), false);
+    Task task = new Task(goal, request.task(), request.description(), request.finishDate(), false);
     Task savedTask = taskRepository.save(task);
     syncGoalCompletion(goal);
     return mapToResponse(savedTask);
@@ -52,10 +53,10 @@ public class TaskService {
         .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
     boolean wasCompleted = task.getCompleted();
-    task.setTask(request.getTask());
-    task.setDescription(request.getDescription());
-    task.setFinishDate(request.getFinishDate());
-    task.setCompleted(request.getCompleted());
+    task.setTask(request.task());
+    task.setDescription(request.description());
+    task.setFinishDate(request.finishDate());
+    task.setCompleted(request.completed());
 
     Task savedTask = taskRepository.save(task);
     rewardService.applyTaskCompletionChange(savedTask, wasCompleted, savedTask.getCompleted());

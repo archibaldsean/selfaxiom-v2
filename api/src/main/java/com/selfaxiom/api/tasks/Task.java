@@ -45,6 +45,14 @@ public class Task {
     this.completed = completed;
   }
 
+  public Task(Goal goal, String task, String description, LocalDate finishDate, boolean completed) {
+    this.goal = goal;
+    this.task = task;
+    this.description = description;
+    this.finishDate = finishDate;
+    this.completed = completed;
+  }
+
   // Getters
   public Long getId() {
     return id;
@@ -71,14 +79,6 @@ public class Task {
   }
 
   // Setters
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public void setGoal(Goal goal) {
-    this.goal = goal;
-  }
-
   public void setTask(String task) {
     this.task = task;
   }
@@ -91,7 +91,7 @@ public class Task {
     this.finishDate = finishDate;
   }
 
-  public void setCompleted(Boolean completed) {
+  public void setCompleted(boolean completed) {
     this.completed = completed;
   }
 
@@ -102,14 +102,12 @@ public class Task {
     if (o == null || getClass() != o.getClass())
       return false;
     Task that = (Task) o;
-    return completed == that.completed && Objects.equals(id, that.id) && Objects.equals(goal, that.goal)
-        && Objects.equals(task, that.task) && Objects.equals(description, that.description)
-        && Objects.equals(finishDate, that.finishDate);
+    return id != null && Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, goal, task, description, finishDate, completed);
+    return Objects.hashCode(id);
   }
 
 }

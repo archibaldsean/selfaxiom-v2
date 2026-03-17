@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import TaskEditModal from "../components/ui/TaskEditModal";
@@ -15,32 +15,58 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
   const [busyDelete, setBusyDelete] = useState(false);
+  const loadRequestIdRef = useRef(0);
 
-  const selectedGoalId = Number(searchParams.get("goalId") || "0");
-  const selectedDay = searchParams.get("day") || new Date().toISOString().slice(0, 10);
+  function formatLocalDateYYYYMMDD(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function isValidDateString(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  }
+
+  function toSafeErrorMessage(caughtError, fallbackMessage) {
+    if (caughtError?.name === "TypeError") return "Network error. Check connection and try again.";
+    return fallbackMessage;
+  }
+
+  const goalIdFromQuery = Number(searchParams.get("goalId") || "0");
+  const selectedGoalId = Number.isInteger(goalIdFromQuery) && goalIdFromQuery > 0 ? goalIdFromQuery : 0;
+  const rawDay = searchParams.get("day") || "";
+  const selectedDay = isValidDateString(rawDay) ? rawDay : formatLocalDateYYYYMMDD(new Date());
   const viewMode = searchParams.get("view") === "all" ? "all" : "day";
 
   async function loadData(goalIdFromQuery) {
+    const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setError("");
 
     try {
       const goalList = await fetchGoals();
+      if (requestId !== loadRequestIdRef.current) return;
       setGoals(goalList);
 
+      const hasRequestedGoal = goalList.some((goal) => goal.id === goalIdFromQuery);
       const fallbackGoalId = goalList[0]?.id || 0;
-      const goalId = goalIdFromQuery || fallbackGoalId;
+      const goalId = hasRequestedGoal ? goalIdFromQuery : fallbackGoalId;
       const taskList = goalId ? await fetchTasksByGoal(goalId) : [];
+      if (requestId !== loadRequestIdRef.current) return;
       setTasks(taskList);
 
-      if (!goalIdFromQuery && fallbackGoalId) {
-        setSearchParams({ goalId: String(fallbackGoalId), day: selectedDay, view: viewMode });
+      if (goalId && goalId !== goalIdFromQuery) {
+        setSearchParams({ goalId: String(goalId), day: selectedDay, view: viewMode });
       }
     } catch (caughtError) {
-      setError(caughtError.message || "Failed to load tasks.");
+      if (requestId !== loadRequestIdRef.current) return;
+      setError(toSafeErrorMessage(caughtError, "Failed to load tasks."));
       setTasks([]);
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -65,7 +91,7 @@ export default function TasksPage() {
       });
       await loadData(task.goalId);
     } catch (caughtError) {
-      setError(caughtError.message || "Failed to update task.");
+      setError(toSafeErrorMessage(caughtError, "Failed to update task."));
     }
   }
 
@@ -94,7 +120,7 @@ export default function TasksPage() {
       setDeletingTask(null);
       await loadData(selectedGoalId);
     } catch (caughtError) {
-      setError(caughtError.message || "Failed to delete task.");
+      setError(toSafeErrorMessage(caughtError, "Failed to delete task."));
     } finally {
       setBusyDelete(false);
     }

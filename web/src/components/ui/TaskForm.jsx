@@ -5,8 +5,14 @@ export default function TaskForm({ goals, defaultGoalId = "", defaultDate, onCre
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  function toSafeErrorMessage(caughtError, fallbackMessage) {
+    if (caughtError?.name === "TypeError") return "Network error. Check connection and try again.";
+    return fallbackMessage;
+  }
+
   async function onSubmit(event) {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setError("");
 
@@ -30,7 +36,7 @@ export default function TaskForm({ goals, defaultGoalId = "", defaultDate, onCre
       form.reset();
       setOpen(false);
     } catch (caughtError) {
-      setError(caughtError.message || "Failed to create task.");
+      setError(toSafeErrorMessage(caughtError, "Failed to create task."));
     } finally {
       setBusy(false);
     }
@@ -51,10 +57,10 @@ export default function TaskForm({ goals, defaultGoalId = "", defaultDate, onCre
           <input id="task-title" name="task" className="inline-form-input" required />
 
           <label className="inline-form-label" htmlFor="task-goal">
-            Goal (optional)
+            Goal
           </label>
           <select id="task-goal" name="goal_id" className="inline-form-input" defaultValue={defaultGoalId ?? ""}>
-            <option value="">No goal</option>
+            <option value="">Select a goal</option>
             {goals.map((goal) => (
               <option key={goal.id} value={goal.id}>
                 {goal.title}

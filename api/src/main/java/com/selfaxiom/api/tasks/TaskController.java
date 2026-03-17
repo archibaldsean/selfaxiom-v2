@@ -4,7 +4,6 @@ import com.selfaxiom.api.auth.AuthModels.AuthenticatedUser;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,44 +26,44 @@ public class TaskController {
   }
 
   @PostMapping
-  public ResponseEntity<TaskResponse> createTask(
+  @ResponseStatus(HttpStatus.CREATED)
+  public TaskResponse createTask(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long goalId,
       @Valid @RequestBody TaskRequest request) {
-    TaskResponse response = taskService.createTask(currentUser.id(), goalId, request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    return taskService.createTask(currentUser.id(), goalId, request);
   }
 
   @GetMapping
-  public ResponseEntity<List<TaskResponse>> listTasksByGoal(
+  public List<TaskResponse> listTasksByGoal(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long goalId) {
-    return ResponseEntity.ok(taskService.listByGoal(currentUser.id(), goalId));
+    return taskService.listByGoal(currentUser.id(), goalId);
   }
 
   @GetMapping("/{taskId}")
-  public ResponseEntity<TaskResponse> getTaskById(
+  public TaskResponse getTaskById(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long goalId,
       @PathVariable Long taskId) {
-    return ResponseEntity.ok(taskService.getById(currentUser.id(), goalId, taskId));
+    return taskService.getById(currentUser.id(), goalId, taskId);
   }
 
   @PutMapping("/{taskId}")
-  public ResponseEntity<TaskResponse> updateTask(
+  public TaskResponse updateTask(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long goalId,
       @PathVariable Long taskId,
       @Valid @RequestBody TaskUpdateRequest request) {
-    return ResponseEntity.ok(taskService.update(currentUser.id(), goalId, taskId, request));
+    return taskService.update(currentUser.id(), goalId, taskId, request);
   }
 
   @DeleteMapping("/{taskId}")
-  public ResponseEntity<Void> deleteTask(
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteTask(
       @AuthenticationPrincipal AuthenticatedUser currentUser,
       @PathVariable Long goalId,
       @PathVariable Long taskId) {
     taskService.delete(currentUser.id(), goalId, taskId);
-    return ResponseEntity.noContent().build();
   }
 }
